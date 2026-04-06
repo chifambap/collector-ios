@@ -1,0 +1,99 @@
+workflows:
+
+  ios-workflow:
+    name: GeoCrop iOS
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      xcode: 16.2
+      node: 20
+      cocoapods: default
+      vars:
+        BUNDLE_ID: com.field.geocrop
+        APP_NAME: GeoCrop
+
+    scripts:
+
+      - name: Install Node dependencies
+        script: |
+          cd frontend
+          npm install
+
+      - name: Add Capacitor iOS platform (skip pod install)
+        script: |
+          cd frontend
+          if [ ! -d "ios" ]; then
+            # Let cap add run — it will fail on pod install but still creates ios/ directory
+            npx cap add ios || true
+          fi
+
+      - name: Patch Podfile for Capacitor 8 (requires iOS 16.0)
+        script: |
+          cd frontend/ios/App
+          # Replace whatever platform line exists with iOS 16.0
+          sed -i '' "s/platform :ios, .*/platform :ios, '16.0'/" Podfile
+          # Also patch the project.pbxproj deployment target
+          sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 16.0;/g" App.xcodeproj/project.pbxproj
+          echo "--- Podfile after patch ---"
+          cat Podfile
+
+      - name: Copy web assets (no pod install)
+        script: |
+          cd frontend
+          npx cap copy ios
+
+      - name: Copy native Swift plugin into Xcode project
+        script: |
+          cp frontend/ios-plugin/MBTilesPlugin.swift frontend/ios/App/App/
+          cp frontend/ios-plugin/MBTilesPlugin.m     frontend/ios/App/App/
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd frontend/ios/App
+          pod install --repo-update
+
+      - name: Build unsigned IPA (no code signing required)
+        script: |
+          cd frontend/ios/App
+
+          # Accept Xcode license automatically
+          sudo xcodebuild -license accept 2>/dev/null || true
+
+          # Build (not archive) — faster and avoids signing prompts
+          xcodebuild build \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="-" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            ONLY_ACTIVE_ARCH=NO \
+            2>&1 | tee /tmp/xcodebuild.log
+
+          # Find the built .app and package as IPA
+          APP_PATH=$(find build -name "App.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: App.app not found"
+            cat /tmp/xcodebuild.log | tail -50
+            exit 1
+          fi
+          mkdir -p build/ipa/Payload
+          cp -r "$APP_PATH" build/ipa/Payload/
+          cd build/ipa
+          zip -r GeoCrop.ipa Payload/
+
+    artifacts:
+      - frontend/ios/App/build/ipa/GeoCrop.ipa
+      - frontend/ios/App/build/GeoCrop.xcarchive
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - pepukaichi@gmail.com
+        notify:
+          success: true
+          failure: true
