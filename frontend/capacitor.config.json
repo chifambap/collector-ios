@@ -1,0 +1,9 @@
+{
+  "appId": "com.field.geocrop",
+  "appName": "GeoCrop",
+  "webDir": "app",
+  "server": {
+    "androidScheme": "http",
+    "iosScheme": "capacitor"
+  }
+}
