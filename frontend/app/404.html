@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<link rel="icon" type="image/png" href="/static/logo/zingsa_logo.png"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="robots" content="noindex, nofollow"/>
+<title>404 — Page Not Found · Geo-Crop Collector</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --earth:    #2d6a28;
+  --earth-dk: #1a4517;
+  --earth-lt: #4a9e44;
+  --bg:       #f2f6f1;
+  --surface:  #ffffff;
+  --surface2: #eaf2e8;
+  --border:   #cfe0cc;
+  --txt:      #1a2818;
+  --txt2:     #5a7255;
+  --shadow:   rgba(26,69,23,.12);
+  --r:        12px;
+  --r-sm:     8px;
+  --font:     'Sora', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--txt); }
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  box-shadow: 0 8px 40px var(--shadow);
+  padding: 3rem 2.5rem;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2.5rem;
+}
+.brand-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin-bottom: .9rem;
+  box-shadow: 0 4px 16px var(--shadow);
+  padding: 3px;
+  background: rgba(45,106,40,.08);
+}
+.brand-name { font-size: 1.2rem; font-weight: 700; color: var(--txt); letter-spacing: -.01em; }
+.brand-sub  { font-size: .7rem; color: var(--txt2); font-weight: 400; margin-top: .2rem; text-transform: uppercase; letter-spacing: .08em; }
+
+.code {
+  font-size: 5rem;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--earth), var(--earth-lt));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: .5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: .75rem;
+}
+
+.msg {
+  font-size: .88rem;
+  color: var(--txt2);
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.btn-primary {
+  display: block;
+  padding: .85rem;
+  background: linear-gradient(135deg, var(--earth), var(--earth-dk));
+  color: #fff;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: var(--font);
+  font-size: .92rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .18s, box-shadow .18s;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(26,69,23,.3); }
+
+.btn-secondary {
+  display: block;
+  padding: .75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+  color: var(--txt);
+  font-family: var(--font);
+  font-size: .88rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color .2s, background .2s;
+}
+.btn-secondary:hover { border-color: var(--earth); background: var(--surface); }
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 1.5rem 0;
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+    <div class="brand">
+      <img class="brand-logo" src="/static/logo/zingsa_logo.png" alt="ZINGSA"/>
+      <div class="brand-name">ZINGSA Geo-Crop Collector</div>
+      <div class="brand-sub">Field Data Collection Platform</div>
+    </div>
+
+    <div class="code">404</div>
+    <div class="title">Page Not Found</div>
+    <p class="msg">The page you're looking for doesn't exist or may have been moved. Please check the URL and try again.</p>
+
+    <div class="actions">
+      <a class="btn-primary" href="/">Go to Sign In</a>
+      <a class="btn-secondary" href="/GeoCrop">Open Field App</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>
