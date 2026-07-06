@@ -1,0 +1,23 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No JS unit tests configured\" && exit 0",
+    "cap:sync": "cap sync",
+    "cap:copy:android": "cap copy android && rm -f android/app/src/main/assets/public/download/*.apk android/app/src/main/assets/public/download/*.ipa",
+    "cap:copy:ios": "cap copy ios && rm -f ios/App/App/public/download/*.apk ios/App/App/public/download/*.ipa"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Capacitor shell for GeoCrop. Web assets live in app/ only; run npm run cap:sync after changes to copy into native projects.",
+  "dependencies": {
+    "@capacitor/android": "^8.2.0",
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/ios": "^8.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.2.0"
+  }
+}
