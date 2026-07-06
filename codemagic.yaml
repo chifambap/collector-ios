@@ -1,0 +1,130 @@
+workflows:
+
+  ios-workflow:
+    name: GeoCrop iOS
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      xcode: 16.2
+      # Capacitor CLI 8.x requires Node >= 22
+      node: 22
+      cocoapods: default
+      vars:
+        BUNDLE_ID: com.field.geocrop
+        APP_NAME: GeoCrop
+
+    scripts:
+
+      - name: Install Node dependencies
+        script: |
+          cd frontend
+          npm install
+
+      # Capacitor 8 uses Swift Package Manager by default (CapApp-SPM) — there is often NO Podfile.
+      - name: Add Capacitor iOS platform
+        script: |
+          set -e
+          cd frontend
+          node -v
+          npx cap --version
+          if [ ! -f "ios/App/App.xcodeproj/project.pbxproj" ]; then
+            echo "Creating ios/App (npx cap add ios)..."
+            npx cap add ios
+          fi
+          if [ ! -f "ios/App/App.xcodeproj/project.pbxproj" ]; then
+            echo "ERROR: ios/App/App.xcodeproj missing after cap add ios"
+            ls -la
+            ls -la ios 2>/dev/null || true
+            ls -la ios/App 2>/dev/null || true
+            exit 1
+          fi
+          echo "OK: Xcode project present"
+          ls -la ios/App
+
+      - name: Set iOS 16 deployment target (pbxproj and optional Podfile)
+        script: |
+          set -e
+          cd frontend/ios/App
+          sed -i '' "s/IPHONEOS_DEPLOYMENT_TARGET = .*/IPHONEOS_DEPLOYMENT_TARGET = 16.0;/g" App.xcodeproj/project.pbxproj
+          if [ -f Podfile ]; then
+            sed -i '' "s/platform :ios, .*/platform :ios, '16.0'/" Podfile
+            echo "--- Podfile (CocoaPods) ---"
+            cat Podfile
+          else
+            echo "No Podfile — using Capacitor SPM layout (CapApp-SPM)."
+            ls -la CapApp-SPM 2>/dev/null || true
+          fi
+
+      - name: Copy web assets
+        script: |
+          cd frontend
+          npx cap copy ios
+
+      - name: Copy native Swift plugin into Xcode project
+        script: |
+          cp frontend/ios-plugin/MBTilesPlugin.swift frontend/ios/App/App/
+          cp frontend/ios-plugin/MBTilesPlugin.m     frontend/ios/App/App/
+
+      - name: Install native dependencies (CocoaPods or SPM)
+        script: |
+          set -e
+          cd frontend/ios/App
+          if [ -f Podfile ]; then
+            echo "Running pod install..."
+            pod install --repo-update
+          else
+            echo "Resolving Swift packages (no Podfile)..."
+            xcodebuild -project App.xcodeproj -scheme App -resolvePackageDependencies -derivedDataPath "$PWD/build_spm_resolve"
+          fi
+
+      - name: Build unsigned IPA (no code signing required)
+        script: |
+          set -e
+          cd frontend/ios/App
+
+          sudo xcodebuild -license accept 2>/dev/null || true
+
+          if [ -d App.xcworkspace ]; then
+            XCODE_TARGET=(-workspace App.xcworkspace)
+            echo "Building with workspace App.xcworkspace"
+          else
+            XCODE_TARGET=(-project App.xcodeproj)
+            echo "Building with project App.xcodeproj (SPM)"
+          fi
+
+          xcodebuild build \
+            "${XCODE_TARGET[@]}" \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="-" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            ONLY_ACTIVE_ARCH=NO \
+            2>&1 | tee /tmp/xcodebuild.log
+
+          APP_PATH=$(find build -name "App.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "ERROR: App.app not found"
+            cat /tmp/xcodebuild.log | tail -80
+            exit 1
+          fi
+          mkdir -p build/ipa/Payload
+          cp -r "$APP_PATH" build/ipa/Payload/
+          cd build/ipa
+          zip -r GeoCrop.ipa Payload/
+
+    artifacts:
+      - frontend/ios/App/build/ipa/GeoCrop.ipa
+      - frontend/ios/App/build/GeoCrop.xcarchive
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - pepukaichi@gmail.com
+        notify:
+          success: true
+          failure: true
